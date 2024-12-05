@@ -2,37 +2,34 @@
 
 namespace BagiCraft01\HubDelay;
 
-use pocketmine\Player;
-use pocketmine\level\Position;
+use pocketmine\player\Player;
 use pocketmine\math\Vector3;
 use pocketmine\scheduler\Task;
+use pocketmine\Server;
+use pocketmine\utils\Config;
 
 class HubTask extends Task {
 
-	private $main;
+	private Main $main;
 
-	private $playerName;
+	private string $playerName;
 
-	private $config = [];
+	private Config $config;
 
-	public function __construct(Main $main, $playerName) {
+	public function __construct(Main $main, Config $config, $playerName) {
 		$this->main = $main;
-		$this->config = $this->main->getConfig()->getAll();
+        $this->config = $config;
 		$this->playerName = $playerName;
 	}
 
-	public function onRun(int $currentTick) {
-		$player = $this->main->getServer()->getPlayerExact($this->playerName);
-		if ($player instanceof Player) {
-			$x = $this->main->getServer()->getDefaultLevel()->getSafeSpawn()->getFloorX();
-			$y = $this->main->getServer()->getDefaultLevel()->getSafeSpawn()->getFloorY();
-			$z = $this->main->getServer()->getDefaultLevel()->getSafeSpawn()->getFloorZ();
-			$level = $this->main->getServer()->getDefaultLevel();
-
-			$player->teleport(new Position($x, $y, $z, $level));
-			$message = str_replace("{player}", $this->playerName, $this->config["msg_tp_success"]);
-			$player->sendMessage($message);
-		}
-	}
+    public function onRun(): void
+    {
+        $player = $this->main->getServer()->getPlayerExact($this->playerName);
+        if ($player instanceof Player) {
+            $player->teleport(Server::getInstance()->getWorldManager()->getDefaultWorld()->getSpawnLocation());
+            $message = str_replace("{player}", $this->playerName, $this->config->get("msg_tp_success"));
+            $player->sendMessage($message);
+        }
+    }
 
 }

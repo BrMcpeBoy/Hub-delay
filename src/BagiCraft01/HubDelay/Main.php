@@ -4,45 +4,43 @@ declare(strict_types=1);
 
 namespace BagiCraft01\HubDelay;
 
-use pocketmine\Player;
+use pocketmine\player\Player;
 use pocketmine\plugin\PluginBase;
 use pocketmine\event\Listener;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
-use pocketmine\utils\TextFormat;
 use pocketmine\utils\Config;
-use pocketmine\Server;
-use pocketmine\scheduler\Task;
 use pocketmine\event\player\PlayerQuitEvent;
 
 class Main extends PluginBase implements Listener {
 
-	private $lastExec = [];
+	private array $lastExec = [];
 
-	private $config = [];
+	private Config $config;
 
-	public function onEnable() {
-		$this->saveDefaultConfig();
-		$this->config = $this->getConfig()->getAll();
+	protected function onEnable(): void
+    {
+        $this->saveDefaultConfig();
+        $this->config = new Config($this->getDataFolder(). "config.yml", Config::YAML);
 
-		if (is_numeric($this->config["delay"])) {
-			$this->getServer()->getPluginManager()->registerEvents($this, $this);
-		} else {
-			$this->getServer()->getLogger()->error("[HubDelay] Plugin disabled. Please check the config file, there seems to be an error!");
-			$this->getServer()->getPluginManager()->disablePlugin($this);
-		}
-	}
+        if (is_numeric($this->config->get("delay"))) {
+            $this->getServer()->getPluginManager()->registerEvents($this, $this);
+        } else {
+            $this->getServer()->getLogger()->error("[HubDelay] Plugin disabled. Please check the config file, there seems to be an error!");
+            $this->getServer()->getPluginManager()->disablePlugin($this);
+        }
+    }
 
-	public function onCommand(CommandSender $sender, Command $cmd, string $label, array $args) : bool {
-		switch ($cmd->getName()) {
+    public function onCommand(CommandSender $sender, Command $command, string $label, array $args) : bool {
+		switch ($command->getName()) {
 			case 'hub':
 				if ($sender instanceof Player) {
 					$name = $sender->getName();
-					if ((isset($this->lastExec[$name])) && (($this->lastExec[$name] + 5 + $this->config["delay"]) > (microtime(true)))) {
-						$sender->sendMessage($this->config["msg_too_fast"]);
+					if ((isset($this->lastExec[$name])) && (($this->lastExec[$name] + 5 + $this->config->get("delay")) > (microtime(true)))) {
+						$sender->sendMessage($this->config->get("msg_too_fast"));
 					} else {
-						$this->getScheduler()->scheduleDelayedTask(new HubTask($this, $sender->getName()), (20*$this->config["delay"]));
-						$message = str_replace("{delay}", (string)$this->config["delay"], $this->config["msg_being_teleported"]);
+						$this->getScheduler()->scheduleDelayedTask(new HubTask($this, $this->config, $sender->getName()), (20*$this->config->get("delay")));
+						$message = str_replace("{delay}", (string)$this->config->get("delay"), $this->config->get("msg_being_teleported"));
 						$sender->sendMessage($message);
 						$this->lastExec[$name] = microtime(true);
 					}

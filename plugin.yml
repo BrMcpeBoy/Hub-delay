@@ -2,7 +2,7 @@
 name: HubDelay
 version: 1.0.0
 main: BagiCraft01\HubDelay\Main
-api: [3.0.0]
+api: 5.0.0
 load: POSTWORLD
 
 author: sProDev <suluh@teknowebapp.com>
@@ -11,4 +11,11 @@ website: https://suluh.my.id/
 commands:
   hub:
     description: "Teleport to HUB"
+    permission: hub.command
+
+permissions:
+  hub.command:
+    description: "Permission to execute /hub command"
+    default: true
+
 ...
